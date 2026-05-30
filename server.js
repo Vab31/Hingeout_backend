@@ -53,7 +53,9 @@ const authLimiter = rateLimit({
 // ── Middleware ────────────────────────────────────────────
 const allowedOrigins = [
   'https://hingeout-frontend.vercel.app', // No trailing slash!
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'https://hingeout.com/',
+  'https://www.hingeout.com'
 ];
 
 app.use(cors({
