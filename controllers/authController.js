@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const User = require('../models/User');
+const connectDB = require('../config/db'); // Added the DB connection utility
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const {
   generateAccessToken,
@@ -13,77 +14,6 @@ const {
 // ─────────────────────────────────────────────────────────────
 // 1. POST /api/auth/register
 // ─────────────────────────────────────────────────────────────
-// const register = async (req, res, next) => {
-//   try {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({
-//         success: false,
-//         errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
-//       });
-//     }
-
-//     const { name, email, phone, password, jobTypes } = req.body;
-
-//     // Check duplicate email
-//     const existing = await User.findOne({ email: email.toLowerCase() });
-//     if (existing) {
-//       return res.status(409).json({
-//         success: false,
-//         message: 'An account with this email already exists.',
-//       });
-//     }
-
-//     // Generate verify token — 24h expiry
-//     const verifyToken = crypto.randomBytes(32).toString('hex');
-//     const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-//     // jobTypes can arrive as JSON string from multipart/form-data
-//     let parsedJobTypes = [];
-//     if (jobTypes) {
-//       try {
-//         parsedJobTypes = typeof jobTypes === 'string' ? JSON.parse(jobTypes) : jobTypes;
-//       } catch {
-//         parsedJobTypes = Array.isArray(jobTypes) ? jobTypes : [jobTypes];
-//       }
-//     }
-
-//     const userData = {
-//       name: name.trim(),
-//       email: email.toLowerCase().trim(),
-//       phone: phone.trim(),
-//       password,                    // pre-save hook in User.js hashes this
-//       jobTypes: parsedJobTypes,
-//       verifyToken,
-//       verifyTokenExpiry,
-//       isVerified: false,
-//     };
-
-//     // Attach resume path if a PDF was uploaded
-//     if (req.file) {
-//       userData.resumePath = `/uploads/${req.file.filename}`;
-//     }
-
-//     const user = await User.create(userData);
-
-//     // Send verification email — non-blocking, don't fail registration if email fails
-//     try {
-//       await sendVerificationEmail(user, verifyToken);
-//     } catch (emailErr) {
-//       console.error('⚠️  Verify email failed:', emailErr.message);
-//     }
-
-//     return res.status(201).json({
-//       success: true,
-//       message: 'Account created! Please check your email to verify your account.',
-//       user: user.toSafeObject(),
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
-
 const register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -93,6 +23,9 @@ const register = async (req, res, next) => {
         errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
       });
     }
+
+    // Ensure database connection is ready
+    await connectDB();
 
     const { name, email, phone, password, jobTypes } = req.body;
 
@@ -133,9 +66,7 @@ const register = async (req, res, next) => {
     /* ==========================================================
        MODIFIED FOR CLOUDINARY PRODUCTION UPLOADS
        ========================================================== */
-    // If a PDF file was handled by the Cloudinary storage middleware
     if (req.file) {
-      // req.file.path holds the secure HTTPS URL pointing directly to Cloudinary
       userData.resumePath = req.file.path; 
     }
 
@@ -158,7 +89,6 @@ const register = async (req, res, next) => {
   }
 };
 
-
 // ─────────────────────────────────────────────────────────────
 // 2. GET /api/auth/verify-email?token=xxx
 // ─────────────────────────────────────────────────────────────
@@ -172,6 +102,9 @@ const verifyEmail = async (req, res, next) => {
         message: 'Verification token is missing.',
       });
     }
+
+    // Ensure database connection is ready
+    await connectDB();
 
     // Find user with matching token that hasn't expired yet
     const user = await User.findOne({
@@ -221,6 +154,9 @@ const login = async (req, res, next) => {
       });
     }
 
+    // Ensure database connection is ready
+    await connectDB();
+
     const { email, password } = req.body;
 
     // Must select +password because it has select:false in schema
@@ -263,7 +199,7 @@ const login = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Logged in successfully.',
-      accessToken,           // Frontend keeps this in memory / React state
+      accessToken,
       user: user.toSafeObject(),
     });
   } catch (err) {
@@ -283,6 +219,9 @@ const forgotPassword = async (req, res, next) => {
         errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
       });
     }
+
+    // Ensure database connection is ready
+    await connectDB();
 
     const { email } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() });
@@ -329,6 +268,9 @@ const resetPassword = async (req, res, next) => {
       });
     }
 
+    // Ensure database connection is ready
+    await connectDB();
+
     const { token, password } = req.body;
 
     const user = await User.findOne({
@@ -364,7 +306,6 @@ const resetPassword = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────
 const refreshToken = async (req, res, next) => {
   try {
-    // Token comes from httpOnly cookie set during login
     const token = req.cookies?.refreshToken;
 
     if (!token) {
@@ -383,6 +324,9 @@ const refreshToken = async (req, res, next) => {
         message: 'Invalid or expired refresh token.',
       });
     }
+
+    // Ensure database connection is ready
+    await connectDB();
 
     // Make sure stored token matches — prevents reuse after logout
     const user = await User.findById(decoded.userId).select('+refreshToken');
@@ -412,6 +356,9 @@ const logout = async (req, res, next) => {
   try {
     const token = req.cookies?.refreshToken;
     if (token) {
+      // Ensure database connection is ready
+      await connectDB();
+
       // Clear token from DB so it can't be reused
       await User.findOneAndUpdate(
         { refreshToken: token },
@@ -427,7 +374,9 @@ const logout = async (req, res, next) => {
 
 const getProfile = async (req, res) => {
   try {
-    // Assuming 'protect' middleware adds user to req.user
+    // Ensure database connection is ready
+    await connectDB();
+
     const user = await User.findById(req.user.id).select('-password');
     res.json({ success: true, user });
   } catch (error) {
@@ -445,4 +394,3 @@ module.exports = {
   logout,
   getProfile
 };
-
