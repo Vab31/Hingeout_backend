@@ -44,9 +44,29 @@ const authLimiter = rateLimit({
 });
 
 // ── Middleware ────────────────────────────────────────────
+// app.use(cors({
+//   origin: process.env.CLIENT_URL || 'https://hingeout-frontend.vercel.app/',
+//   // origin: process.env.CLIENT_URL || 'http://localhost:3000',
+//   credentials: true,  // Allow cookies (refresh token)
+// }));
+
+// ── Middleware ────────────────────────────────────────────
+const allowedOrigins = [
+  'https://hingeout-frontend.vercel.app', // No trailing slash!
+  'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'https://hingeout-frontend.vercel.app/',
-  // origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.CLIENT_URL === origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,  // Allow cookies (refresh token)
 }));
 
