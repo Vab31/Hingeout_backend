@@ -60,10 +60,10 @@ const authLimiter = rateLimit({
 
 // ── Middleware ────────────────────────────────────────────
 const allowedOrigins = [
-  'https://hingeout-frontend.vercel.app', // No trailing slash!
+  'https://hingeout-frontend.vercel.app',
   'http://localhost:3000',
-  'https://hingeout.com/',
-  'https://www.hingeout.com'
+  'https://hingeout.com',
+  'https://www.hingeout.com',
 ];
 
 app.use(cors({
@@ -71,10 +71,13 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, curl, postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.CLIENT_URL === origin) {
+    const cleanOrigin = origin.replace(/\/$/, '');
+    const isAllowed = allowedOrigins.some(o => o.replace(/\/$/, '') === cleanOrigin) || process.env.CLIENT_URL === origin;
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS: ' + origin));
     }
   },
   credentials: true,  // Allow cookies (refresh token)
@@ -84,6 +87,25 @@ app.use(express.json({ limit: '10kb' }));         // Body size limit
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(globalLimiter);
+
+// ── Root & Health check ───────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'HingeOut API Server is live and healthy 🚀',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
+});
+
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/creator', creatorRoutes);
 app.use('/api/artha', arthaJobRoutes);
@@ -92,21 +114,6 @@ app.use('/api/job-sources', jobSourceRoutes);
 app.use('/api/admin/jobs', adminJobRoutes);
 app.use('/api/admin', adminRoutes); 
 app.use('/api/newsletter', newsletterRoutes); 
-
-// ── Static: serve uploaded resumes (dev only) ─────────────
-// In production, files go to Cloudinary — this line is skipped
-if (process.env.NODE_ENV === 'development') {
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-}
-
-// ── Health check ──────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-  });
-});
 
 // ── Routes ────────────────────────────────────────────────
 // app.use('/api/auth',  authLimiter, authRoutes);
