@@ -27,7 +27,18 @@ const register = async (req, res, next) => {
     // Ensure database connection is ready
     await connectDB();
 
-    const { name, email, phone, password, jobTypes } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      password,
+      jobTypes,
+      role,
+      linkedInUrl,
+      telegramChannel,
+      primaryPlatform,
+      audienceSize,
+    } = req.body;
 
     // Check duplicate email
     const existing = await User.findOne({ email: email.toLowerCase() });
@@ -52,15 +63,29 @@ const register = async (req, res, next) => {
       }
     }
 
+    const assignedRole = role === 'creator' ? 'creator' : 'student';
+    let referralCode = null;
+    if (assignedRole === 'creator') {
+      const cleanName = name.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const randomHex = crypto.randomBytes(3).toString('hex');
+      referralCode = `c_${cleanName.slice(0, 10)}_${randomHex}`;
+    }
+
     const userData = {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone.trim(),
       password,                    // pre-save hook in User.js hashes this
       jobTypes: parsedJobTypes,
+      role: assignedRole,
+      referralCode,
+      linkedInUrl: (linkedInUrl || '').trim(),
+      telegramChannel: (telegramChannel || '').trim(),
+      primaryPlatform: primaryPlatform || '',
+      audienceSize: audienceSize || '',
       verifyToken,
       verifyTokenExpiry,
-      isVerified: false,
+      isVerified: process.env.NODE_ENV === 'development' || process.env.AUTO_VERIFY === 'true',
     };
 
     /* ==========================================================
@@ -178,7 +203,7 @@ const login = async (req, res, next) => {
       });
     }
 
-    if (!user.isVerified) {
+    if (!user.isVerified && process.env.NODE_ENV !== 'development' && process.env.AUTO_VERIFY !== 'true') {
       return res.status(403).json({
         success: false,
         message: 'Please verify your email before logging in. Check your inbox.',
@@ -374,13 +399,49 @@ const logout = async (req, res, next) => {
 
 const getProfile = async (req, res) => {
   try {
-    // Ensure database connection is ready
     await connectDB();
-
     const user = await User.findById(req.user.id).select('-password');
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    await connectDB();
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const {
+      name,
+      phone,
+      linkedInUrl,
+      telegramChannel,
+      primaryPlatform,
+      audienceSize,
+      jobTypes,
+    } = req.body;
+
+    if (name) user.name = name.trim();
+    if (phone) user.phone = phone.trim();
+    if (linkedInUrl !== undefined) user.linkedInUrl = linkedInUrl.trim();
+    if (telegramChannel !== undefined) user.telegramChannel = telegramChannel.trim();
+    if (primaryPlatform !== undefined) user.primaryPlatform = primaryPlatform;
+    if (audienceSize !== undefined) user.audienceSize = audienceSize;
+    if (jobTypes && Array.isArray(jobTypes)) user.jobTypes = jobTypes;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully!',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -392,5 +453,6 @@ module.exports = {
   resetPassword,
   refreshToken,
   logout,
-  getProfile
+  getProfile,
+  updateProfile,
 };

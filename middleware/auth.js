@@ -16,7 +16,7 @@ const protect = async (req, res, next) => {
     const decoded = verifyAccessToken(token);
 
     // --- NEW LOGIC FOR HARDCODED ADMIN ---
-    if (decoded.role === 'admin') {
+    if (decoded.role === 'admin' || decoded.userId === 'admin_root') {
       req.user = { id: 'admin_root', role: 'admin', isVerified: true };
       return next();
     }
@@ -28,7 +28,8 @@ const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    console.error("Auth middleware error:", err);
+    return res.status(401).json({ message: 'Invalid or expired token.', error: err.message });
   }
 };
 

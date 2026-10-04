@@ -10,6 +10,12 @@ const { verifyEmailConnection } = require('./utils/email');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/adminRoutes');
+const adminJobRoutes = require('./routes/jobRoutes');
+const publicJobRoutes = require('./routes/publicJobRoutes');
+const jobSourceRoutes = require('./routes/jobSourceRoutes');
+const creatorRoutes = require('./routes/creatorRoutes');
+const arthaJobRoutes = require('./routes/arthaJobRoutes');
+const newsletterRoutes = require('./routes/newsletterRoutes');
 
 // ── Route imports (we'll add these as we build each feature) ──
 // const authRoutes    = require('./routes/auth');
@@ -20,7 +26,9 @@ const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 
 // ── Connect to DB ─────────────────────────────────────────
-connectDB();
+connectDB().catch((err) => {
+  console.warn("⚠️ DB Connection notice (will reconnect on request):", err.message);
+});
 
 // ── Verify email transporter ──────────────────────────────
 verifyEmailConnection();
@@ -77,7 +85,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(globalLimiter);
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/creator', creatorRoutes);
+app.use('/api/artha', arthaJobRoutes);
+app.use('/api/jobs', publicJobRoutes);
+app.use('/api/job-sources', jobSourceRoutes);
+app.use('/api/admin/jobs', adminJobRoutes);
 app.use('/api/admin', adminRoutes); 
+app.use('/api/newsletter', newsletterRoutes); 
 
 // ── Static: serve uploaded resumes (dev only) ─────────────
 // In production, files go to Cloudinary — this line is skipped

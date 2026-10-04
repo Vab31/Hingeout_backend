@@ -53,7 +53,7 @@ const {
   register, verifyEmail, login,
   forgotPassword, resetPassword,
   refreshToken, logout,
-  getProfile // Combined into a single destructuring block for cleanliness
+  getProfile, updateProfile
 } = require('../controllers/authController');
 
 const { protect, adminOnly, requireVerified } = require('../middleware/auth');
@@ -92,5 +92,6 @@ router.post('/reset-password', resetRules, resetPassword);
 router.post('/refresh-token', refreshToken);
 router.post('/logout', logout);
 router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
 module.exports = router;

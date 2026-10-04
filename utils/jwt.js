@@ -4,10 +4,17 @@ const jwt = require('jsonwebtoken');
  * Generate a short-lived access token (15 min default)
  */
 const generateAccessToken = (userId, role) => {
+  let payload;
+  if (typeof userId === 'object' && userId !== null && !userId._bsontype && (userId.userId || userId.id) && userId.constructor?.name === 'Object') {
+    payload = userId;
+  } else {
+    const idStr = String(userId?._id || userId);
+    payload = { userId: idStr, role };
+  }
   return jwt.sign(
-    { userId, role },
-    process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' }
+    payload,
+    process.env.JWT_ACCESS_SECRET || 'hingeout_access_secret_2026',
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '1d' }
   );
 };
 
@@ -15,9 +22,10 @@ const generateAccessToken = (userId, role) => {
  * Generate a long-lived refresh token (7 days default)
  */
 const generateRefreshToken = (userId) => {
+  const idStr = String(userId?._id || userId);
   return jwt.sign(
-    { userId },
-    process.env.JWT_REFRESH_SECRET,
+    { userId: idStr },
+    process.env.JWT_REFRESH_SECRET || 'hingeout_refresh_secret_2026',
     { expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d' }
   );
 };
@@ -26,7 +34,7 @@ const generateRefreshToken = (userId) => {
  * Verify an access token — returns payload or throws
  */
 const verifyAccessToken = (token) => {
-  return jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+  return jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'hingeout_access_secret_2026');
 };
 
 /**

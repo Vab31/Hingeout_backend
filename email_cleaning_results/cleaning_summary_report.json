@@ -1,0 +1,74 @@
+{
+  "status": "COMPLETED_SUCCESSFULLY",
+  "totalScanned": 50317,
+  "cleanCount": 48616,
+  "cleanPercentage": "96.62%",
+  "rejectedCount": 1701,
+  "rejectedPercentage": "3.38%",
+  "durationSeconds": "151.54",
+  "rejectionBreakdown": {
+    "SYNTAX_ERROR": 1363,
+    "DUPLICATE_EMAIL": 82,
+    "DISPOSABLE_DOMAIN": 3,
+    "ROLE_BASED_EMAIL": 7,
+    "NO_MX_SERVER": 246,
+    "INVALID_DOMAIN": 0
+  },
+  "topDomains": [
+    {
+      "domain": "gmail.com",
+      "count": 46580,
+      "percentage": "95.81%"
+    },
+    {
+      "domain": "outlook.com",
+      "count": 76,
+      "percentage": "0.16%"
+    },
+    {
+      "domain": "thapar.edu",
+      "count": 59,
+      "percentage": "0.12%"
+    },
+    {
+      "domain": "vitstudent.ac.in",
+      "count": 43,
+      "percentage": "0.09%"
+    },
+    {
+      "domain": "yahoo.com",
+      "count": 33,
+      "percentage": "0.07%"
+    },
+    {
+      "domain": "pilani.bits-pilani.ac.in",
+      "count": 29,
+      "percentage": "0.06%"
+    },
+    {
+      "domain": "gamil.com",
+      "count": 26,
+      "percentage": "0.05%"
+    },
+    {
+      "domain": "sscbs.du.ac.in",
+      "count": 26,
+      "percentage": "0.05%"
+    },
+    {
+      "domain": "srmist.edu.in",
+      "count": 26,
+      "percentage": "0.05%"
+    },
+    {
+      "domain": "itbhu.ac.in",
+      "count": 26,
+      "percentage": "0.05%"
+    }
+  ],
+  "generatedFiles": {
+    "cleanCsv": "/Users/vaibhavsingh/Documents/HingeOut/Hingeout_backend/email_cleaning_results/clean_subscribers_50k.csv",
+    "rejectedCsv": "/Users/vaibhavsingh/Documents/HingeOut/Hingeout_backend/email_cleaning_results/rejected_emails_50k.csv",
+    "summaryJson": "/Users/vaibhavsingh/Documents/HingeOut/Hingeout_backend/email_cleaning_results/cleaning_summary_report.json"
+  }
+}

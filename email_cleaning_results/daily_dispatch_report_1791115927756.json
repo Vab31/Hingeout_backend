@@ -1,0 +1,37 @@
+{
+  "executedAt": "2026-10-04T12:12:07.756Z",
+  "isDryRun": true,
+  "batchSize": 50,
+  "offset": 0,
+  "totalTargeted": 50,
+  "sentCount": 50,
+  "failCount": 0,
+  "durationSeconds": 0.45,
+  "curatedJobs": [
+    {
+      "id": "job_tech_1",
+      "title": "Full Stack Engineering Intern (React & Node.js)",
+      "company": "Ferri AI Global",
+      "cpc": "3.50"
+    },
+    {
+      "id": "job_tech_2",
+      "title": "Graduate Software Developer (AI & Cloud Platforms)",
+      "company": "Avanade Technologies",
+      "cpc": "2.80"
+    },
+    {
+      "id": "job_tech_3",
+      "title": "Backend Systems Engineer (Python / Distributed Systems)",
+      "company": "Abhyaz Tech Solutions",
+      "cpc": "2.50"
+    },
+    {
+      "id": "job_tech_4",
+      "title": "Associate Frontend Developer (Next.js / TypeScript)",
+      "company": "Pret Digital Innovation",
+      "cpc": "2.10"
+    }
+  ],
+  "errors": []
+}

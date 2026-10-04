@@ -74,8 +74,55 @@ const userSchema = new mongoose.Schema(
     // ── Auth & verification ───────────────────────────────
     role: {
       type: String,
-      enum: ['student', 'admin'],
+      enum: ['student', 'admin', 'creator'],
       default: 'student',
+    },
+
+    // ── Creator & Referral Program Details ────────────────
+    referralCode: {
+      type: String,
+      default: null,
+      sparse: true,
+      trim: true,
+    },
+
+    linkedInUrl: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    telegramChannel: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    primaryPlatform: {
+      type: String,
+      enum: ['LinkedIn', 'Telegram', 'WhatsApp', 'YouTube', 'Instagram', 'Other', ''],
+      default: '',
+    },
+
+    audienceSize: {
+      type: String,
+      enum: ['< 1k', '1k - 10k', '10k - 50k', '50k+', ''],
+      default: '',
+    },
+
+    cpcBalance: {
+      type: Number,
+      default: 0,
+    },
+
+    totalClicksDriven: {
+      type: Number,
+      default: 0,
+    },
+
+    totalUniqueClicksDriven: {
+      type: Number,
+      default: 0,
     },
 
     isVerified: {
@@ -115,7 +162,7 @@ const userSchema = new mongoose.Schema(
 );
 
 // ── Indexes ───────────────────────────────────────────────
-userSchema.index({ email: 1 });
+userSchema.index({ referralCode: 1 });
 userSchema.index({ verifyToken: 1 });
 userSchema.index({ resetToken: 1 });
 
@@ -144,6 +191,14 @@ userSchema.methods.toSafeObject = function () {
     jobTypes: this.jobTypes,
     resumePath: this.resumePath,
     role: this.role,
+    referralCode: this.referralCode,
+    linkedInUrl: this.linkedInUrl,
+    telegramChannel: this.telegramChannel,
+    primaryPlatform: this.primaryPlatform,
+    audienceSize: this.audienceSize,
+    cpcBalance: this.cpcBalance,
+    totalClicksDriven: this.totalClicksDriven,
+    totalUniqueClicksDriven: this.totalUniqueClicksDriven,
     isVerified: this.isVerified,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
