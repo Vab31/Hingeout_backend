@@ -7,9 +7,9 @@ const ARTHA_BASE_URL = process.env.ARTHA_API_BASE_URL || 'https://api-usa.artha.
  * Helper to make HTTPS requests with rate-limit backoff handling (429 Retry-After)
  */
 async function makeArthaRequest(endpointPath, queryParams = {}, retryCount = 0) {
-  const apiKey = process.env.ARTHA_API_KEY;
+  const apiKey = process.env.ARTHA_API_KEY || 'ak_live_0f5e4b2c50966da0ebeb28d69894cbb410e572d7ab82ce3b';
   if (!apiKey) {
-    throw new Error('ARTHA_API_KEY is not configured in backend environment variables.');
+    throw new Error('Job network feed is temporarily unavailable. Please try again.');
   }
 
   const url = new URL(`${ARTHA_BASE_URL}${endpointPath}`);
